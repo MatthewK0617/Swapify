@@ -10,16 +10,14 @@ import {
 } from 'react-native';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 
+import {
+    Colors,
+} from 'react-native/Libraries/NewAppScreen';
+import Nav from '../nav/Nav';
 
 GoogleSignin.configure({
     webClientId: '265152059857-3gop4mj8d3phhv2lnv23o0b58kdvi6e2.apps.googleusercontent.com',
 })
-
-import {
-    Colors,
-} from 'react-native/Libraries/NewAppScreen';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 
 interface ChildComponentProps {
     navigation: any,
@@ -28,26 +26,14 @@ interface ChildComponentProps {
     setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
     userInfo: any | null; // Adjust the type based on your data structure
     setUserInfo: React.Dispatch<React.SetStateAction<any | null>>;
-    savedInfo: {
-        first: string;
-        last: string;
-        email: string;
-    };
-    setSavedInfo: React.Dispatch<
-        React.SetStateAction<{
-            first: string;
-            last: string;
-            email: string;
-        }>
-    >;
 }
 
 function Menu(props: ChildComponentProps): JSX.Element {
     const { navigation, isDarkMode, loggedIn, setLoggedIn,
-        userInfo, setUserInfo, savedInfo, setSavedInfo } = props;
+        userInfo, setUserInfo } = props;
 
     return (
-        <SafeAreaView style={[styles.sectionContainer, { backgroundColor: isDarkMode ? Colors.black : Colors.white, }]}>
+        <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? Colors.black : Colors.white, }]}>
             <Text
                 style={[
                     styles.sectionTitle,
@@ -57,21 +43,15 @@ function Menu(props: ChildComponentProps): JSX.Element {
                 ]}>
                 Welcome!
             </Text>
-            <View style={[styles.userInfoView, { backgroundColor: isDarkMode ? Colors.light : Colors.dark }]}>
-                <Text style={styles.userInfo}>{savedInfo.first} {savedInfo.last}</Text>
+            {userInfo &&
+                <View style={[styles.userInfoView, { backgroundColor: isDarkMode ? Colors.light : Colors.dark }]}>
+                    <Text style={styles.userInfo}>{userInfo[0].first} {userInfo[0].last}</Text>
+                </View>
+            }
+            <View style={styles.bottomNav}>
+                <Nav navigation={navigation} isDarkMode={isDarkMode} selected={"Menu"} />
             </View>
-            <View style={styles.navButton}>
-                <TouchableOpacity onPress={() => {
-                    navigation.navigate("Login");
-                }}>
-                    <Text style={[styles.navText]}>
-                        Go to Login
-                    </Text>
-                </TouchableOpacity>
-            </View>
-            <View>
-            </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -82,7 +62,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: 24,
+        // maxHeight: '100%',
     },
     sectionTitle: {
         fontSize: 24,
@@ -118,6 +98,16 @@ const styles = StyleSheet.create({
     },
     navText: {
         fontSize: 18,
+    },
+    bottomNav: {
+        position: 'absolute',
+        justifyContent: "flex-end",
+        borderTopWidth: 0.5,
+        borderColor: 'white',
+        height: '10%',
+        width: '100%',
+        backgroundColor: 'black',
+        bottom: 0,
     }
 });
 

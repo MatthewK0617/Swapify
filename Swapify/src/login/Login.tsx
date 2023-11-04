@@ -2,19 +2,17 @@ import React, { useEffect, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import {
     SafeAreaView,
-    ScrollView,
-    StatusBar,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    useColorScheme,
     View,
 } from 'react-native';
 // import auth from '@react-native-firebase/auth';
+import Axios from 'axios';
+import config from 'react-native-config';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 GoogleSignin.configure({
     webClientId: '265152059857-3gop4mj8d3phhv2lnv23o0b58kdvi6e2.apps.googleusercontent.com',
@@ -31,30 +29,26 @@ interface ChildComponentProps {
     setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
     userInfo: any | null; // Adjust the type based on your data structure
     setUserInfo: React.Dispatch<React.SetStateAction<any | null>>;
-    savedInfo: {
-        first: string;
-        last: string;
-        email: string;
-    };
-    setSavedInfo: React.Dispatch<
-        React.SetStateAction<{
-            first: string;
-            last: string;
-            email: string;
-        }>
-    >;
 }
 
 
 function Login(props: ChildComponentProps) {
     const { navigation, isDarkMode, loggedIn, setLoggedIn,
-        userInfo, setUserInfo, savedInfo, setSavedInfo } = props;
+        userInfo, setUserInfo } = props;
     const [first, setFirst] = useState("");
     const [last, setLast] = useState("");
 
     useEffect(() => {
         if (loggedIn) navigation.navigate('Menu');
     }, [loggedIn]);
+
+    // useEffect(() => {
+    //     // Handle side effects when userInfo changes
+    //     if (userInfo) {
+    //         // Perform actions or updates that rely on the new userInfo here
+    //         console.log('userInfo has been updated:', userInfo);
+    //     }
+    // }, [userInfo]);
 
     const storeData = async (unsavedUser: { first: string, last: string, email: string }) => {
         try {
@@ -65,38 +59,50 @@ function Login(props: ChildComponentProps) {
         }
     }
 
-    useEffect(() => {
-        AsyncStorage.getItem('userInfo')
-            .then((userInfoJSONString) => {
-                if (userInfoJSONString !== null) {
-                    const userInfoParsed = JSON.parse(userInfoJSONString);
-                    console.log(userInfoParsed);
-                    setSavedInfo(userInfoParsed);
-                    setLoggedIn(true);
-                    console.log("logged in");
-                } else {
-                    console.log("Object not in AsyncStorage; user is most likely not logged in");
-                }
-            })
-            .catch((err) => {
-                console.error("Error in AsyncStorage userInfo retrieval: ", err);
-            })
-    }, []);
+    // useEffect(() => {
+    //     AsyncStorage.getItem('userInfo')
+    //         .then((userInfoJSONString) => {
+    //             if (userInfoJSONString !== null) {
+    //                 const userInfoParsed = JSON.parse(userInfoJSONString);
+    //                 console.log(userInfoParsed);
+    //                 setSavedInfo(userInfoParsed);
+    //                 setLoggedIn(true);
+    //                 console.log(`${userInfoParsed.first} ${userInfoParsed.last} logged in.`);
+    //             } else {
+    //                 console.log("Not logged in.");
+    //             }
+    //         })
+    //         .catch((err) => {
+    //             console.error("Error in AsyncStorage userInfo retrieval: ", err);
+    //         })
+    // }, []);
+
+    const updateData = (res: any, userInfo2: any) => {
+        setUserInfo(res.data);
+        // setSavedInfo(res.data);
+        storeData(userInfo2);
+        setLoggedIn(true);
+        console.log("Logged in.")
+    }
 
     const signIn = async () => {
         try {
             await GoogleSignin.hasPlayServices();
             const userSigninInfo = await GoogleSignin.signIn();
             if (userSigninInfo) {
-                setUserInfo(userSigninInfo);
                 const userInfo2 = {
                     first: userSigninInfo.user.givenName || '',
                     last: userSigninInfo.user.familyName || '',
                     email: userSigninInfo.user.email
                 }
-                setSavedInfo(userInfo2);
-                await storeData(userInfo2);
-                setLoggedIn(true);
+                // setSavedInfo(userInfo2);
+                Axios.get(`${config.REACT_APP_URL}login`, {
+                    params: { gmail: userInfo2.email }
+                }).then((res) => {
+                    // console.log(res);
+                    updateData(res, userInfo2);
+                    console.log(res.data);
+                }).catch((err) => { console.log(err) });
             } else {
                 console.log("Initial sign-in information is null??");
             }
@@ -105,20 +111,25 @@ function Login(props: ChildComponentProps) {
         }
     };
 
-    const signOut = async () => {
+    const signUp = async () => {
         try {
-            await GoogleSignin.signOut();
-            setSavedInfo({
-                first: '',
-                last: '',
-                email: '',
-            });
-            setUserInfo(null);
-            await AsyncStorage.setItem('userInfo', "");
-            setLoggedIn(false);
-        } catch (error) {
-            console.error(error);
-        }
+            await GoogleSignin.hasPlayServices();
+            const userSignupInfo = await GoogleSignin.signIn();
+            if (userSignupInfo) {
+                const userInfo2 = {
+                    first: userSignupInfo.user.givenName || '',
+                    last: userSignupInfo.user.familyName || '',
+                    email: userSignupInfo.user.email
+                }
+                console.log(`${config.REACT_APP_URL}signup`);
+                Axios.post(`${config.REACT_APP_URL}signup`, {
+                    userInfo: userInfo2,
+                }).then((res) => {
+                    console.log("working");
+                    updateData(res, userInfo2);
+                }).catch((err) => { console.log(err) })
+            }
+        } catch (err) { console.log(err) }
     }
 
     return (
@@ -153,18 +164,18 @@ function Login(props: ChildComponentProps) {
                 />
             </View>
             <View style={[styles.googleLogin]}>
-                {!loggedIn ?
-                    <TouchableOpacity onPress={signIn}>
-                        <Text style={[styles.googleLoginText]}>
-                            Login with Google
-                        </Text>
-                    </TouchableOpacity> :
-                    <TouchableOpacity onPress={signOut}>
-                        <Text style={[styles.googleLoginText]}>
-                            Log out
-                        </Text>
-                    </TouchableOpacity>
-                }
+                <TouchableOpacity onPress={signIn}>
+                    <Text style={[styles.googleLoginText]}>
+                        Login with Google
+                    </Text>
+                </TouchableOpacity>
+            </View>
+            <View style={[styles.googleSignup]}>
+                <TouchableOpacity onPress={signUp}>
+                    <Text style={[styles.googleLoginText]}>
+                        Signup with Google
+                    </Text>
+                </TouchableOpacity>
             </View>
             {loggedIn &&
                 <View style={styles.navButton}>
@@ -189,9 +200,7 @@ const styles = StyleSheet.create({
     sectionContainer: {
         flex: 1,
         justifyContent: "flex-start",
-        // justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: 24,
     },
     sectionTitle: {
         marginTop: '30%',
@@ -230,6 +239,18 @@ const styles = StyleSheet.create({
         padding: 16,
         fontSize: 20,
         backgroundColor: "#92BFB1",
+        borderRadius: 8,
+        // borderBottomWidth: 1,
+        // borderBottomColor: "white",
+    },
+    googleSignup: {
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: '10%',
+        // marginRight: 10,
+        padding: 16,
+        fontSize: 20,
+        backgroundColor: "#F07167",
         borderRadius: 8,
         // borderBottomWidth: 1,
         // borderBottomColor: "white",
