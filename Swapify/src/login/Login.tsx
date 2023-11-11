@@ -100,11 +100,12 @@ function Login(props: ChildComponentProps) {
                     params: { gmail: userInfo2.email }
                 }).then((res) => {
                     // console.log(res);
-                    updateData(res, userInfo2);
-                    console.log(res.data);
+                    if (userInfo) updateData(res, userInfo2);
+                    else console.log("Sign-up for an account")
+                    console.log("Login 104:", res.data);
                 }).catch((err) => { console.log(err) });
             } else {
-                console.log("Initial sign-in information is null??");
+                console.log("Initial sign-in information is null. Most likely invalid email account.");
             }
         } catch (error) {
             console.log("error");

@@ -32,6 +32,10 @@ function Menu(props: ChildComponentProps): JSX.Element {
     const { navigation, isDarkMode, loggedIn, setLoggedIn,
         userInfo, setUserInfo } = props;
 
+    useEffect(() => {
+        console.log(userInfo);
+    }, [userInfo])
+
     return (
         <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? Colors.black : Colors.white, }]}>
             <Text

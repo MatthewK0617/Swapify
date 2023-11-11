@@ -21,18 +21,16 @@ import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import config from 'react-native-config';
+import { Config } from 'react-native-config';
 import io from "socket.io-client";
 
 import Login from './src/login/Login';
 import Menu from './src/menu/Menu';
 import Settings from './src/settings/Settings';
 
-
-
 const Stack = createStackNavigator();
 function App(): JSX.Element {
-  const URL = process.env.REACT_APP_URL || "http://localhost:8000/";
+  const URL = Config.REACT_APP_URL || "http://localhost:8000/";
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -51,17 +49,22 @@ function App(): JSX.Element {
   // or just keep this as is because it will update since there can be any type 
 
   useEffect(() => {
+    console.log(`${Config.REACT_APP_URL}`);
+    console.log(Config)
     const fetchData = async () => {
       const queryString = await AsyncStorage.getItem('userInfo');
       if (queryString) {
         const query = JSON.parse(queryString);
-        console.log(query);
-        Axios.get(`${config.REACT_APP_URL}login`, {
+        console.log("query:", query);
+        Axios.get(`${URL}login`, {
           params: { gmail: query.email }
         }).then((res) => {
-          setLoggedIn(true);
-          setUserInfo(res.data);
-        }).catch((err) => { console.log(err) });
+          console.log(res.data);
+          if (res.data.length != 0) {
+            setLoggedIn(true);
+            setUserInfo(res.data);
+          }
+        }).catch((err) => { console.log("initial login", err) });
       }
     }
 
