@@ -9,11 +9,14 @@ import {
     View,
 } from 'react-native';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
+import config from 'react-native-config';
+import Geolocation from '@react-native-community/geolocation';
 
 import {
     Colors,
 } from 'react-native/Libraries/NewAppScreen';
 import Nav from '../nav/Nav';
+import Axios from 'axios';
 
 GoogleSignin.configure({
     webClientId: '265152059857-3gop4mj8d3phhv2lnv23o0b58kdvi6e2.apps.googleusercontent.com',
@@ -32,21 +35,42 @@ function Menu(props: ChildComponentProps): JSX.Element {
     const { navigation, isDarkMode, loggedIn, setLoggedIn,
         userInfo, setUserInfo } = props;
 
+    const [currPos, setCurrPos] = useState<any | null>(null);
+
+    // useEffect(() => {
+    //     console.log(config.GEOLOCATION_API_KEY)
+    //     Axios.get(`https://ipgeolocation.abstractapi.com/v1/?api_key=${config.GEOLOCATION_API_KEY}`, {
+    //     }).then((res) => {
+    //         console.log(res);
+    //     }).catch((err) => console.log(err));
+    // }, [])
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            Geolocation.getCurrentPosition(info => {
+                console.log(info);
+                setCurrPos(info);
+            });
+        }, 5000);
+        // Clean up the interval when the component is unmounted.
+        return () => clearInterval(intervalId);
+    }, []);
+
     useEffect(() => {
         console.log(userInfo);
     }, [userInfo])
 
     return (
         <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? Colors.black : Colors.white, }]}>
-            <Text
+            {currPos && <Text
                 style={[
                     styles.sectionTitle,
                     {
                         color: isDarkMode ? Colors.white : Colors.black,
                     },
                 ]}>
-                Welcome!
-            </Text>
+                {currPos.coords.latitude}, {currPos.coords.longitude}
+            </Text>}
             {userInfo &&
                 <View style={[styles.userInfoView, { backgroundColor: isDarkMode ? Colors.light : Colors.dark }]}>
                     <Text style={styles.userInfo}>{userInfo[0].first} {userInfo[0].last}</Text>
