@@ -27,7 +27,7 @@ interface ChildComponentProps {
     isDarkMode: boolean,
     loggedIn: boolean;
     setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
-    userInfo: any | null; // Adjust the type based on your data structure
+    userInfo: any | null; // Adjust the type based on data structure
     setUserInfo: React.Dispatch<React.SetStateAction<any | null>>;
 }
 
@@ -39,6 +39,8 @@ function Login(props: ChildComponentProps) {
     const [last, setLast] = useState("");
 
     useEffect(() => {
+        // console.log("logged");
+        console.log(loggedIn, userInfo);
         if (loggedIn) navigation.navigate('Menu');
     }, [loggedIn]);
 
@@ -100,7 +102,8 @@ function Login(props: ChildComponentProps) {
                     params: { gmail: userInfo2.email }
                 }).then((res) => {
                     // console.log(res);
-                    if (userInfo) updateData(res, userInfo2);
+                    console.log(userInfo2);
+                    if (userInfo2) updateData(res, userInfo2);
                     else console.log("Sign-up for an account")
                     console.log("Login 104:", res.data);
                 }).catch((err) => { console.log(err) });
